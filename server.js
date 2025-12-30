@@ -1,13 +1,13 @@
 require("module-alias/register");
 const express = require("express");
-const response = require("@/middleware/responseFormat");
-const errorHandle = require("@/middleware/exceptionHandler");
+const response = require("@/middlewares/responseFormat");
+const errorHandle = require("@/middlewares/exceptionHandler");
 const testSuccess = require("@/routes/test-success.route");
 const testError = require("@/routes/test-error.route");
-const apiRateLimiter = require("@/middleware/rateLimiter");
+const apiRateLimiter = require("@/middlewares/rateLimiter");
 var cors = require("cors");
 const appRoute = require("@/routes");
-const notFoundHandle = require("@/middleware/notFoundHandler");
+const notFoundHandle = require("@/middlewares/notFoundHandler");
 const app = express();
 const port = 3000;
 const allowedOrigins = [

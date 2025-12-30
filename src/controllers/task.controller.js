@@ -24,25 +24,25 @@ const create = async (req, res) => {
     res.success(task, 201);
 };
 
-const edit = (req, res) => {
+const edit = async (req, res) => {
     const id = +req.params.id;
-    const data = {
-        title: req.body.title,
-        content: req.body.content,
-        createdAt: req.body.createdAt,
-    };
-    const post = postsModel.edit(id, data);
-    if (!post) {
+    let data = {};
+    const title = req.body.title;
+    const isCompleted = req.body.isCompleted;
+    if (title !== void 0) data.title = title;
+    if (isCompleted !== void 0) data.isCompleted = isCompleted;
+    const task = await tasksModel.update(id, data);
+    if (!task) {
         return res.error({ message: "404 Not Found" }, 404);
     }
-    res.success(post);
+    res.response(task);
 };
 const del = async (req, res) => {
     const id = +req.params.id;
-    const post = await tasksModel.del(id);
-    if (!post) {
+    const task = await tasksModel.del(id);
+    if (!task) {
         return res.error({ message: "404 Not Found" }, 404);
     }
-    res.success(post, 204);
+    res.response(task, 200);
 };
 module.exports = { getAll, getOne, create, edit, del };

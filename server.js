@@ -1,7 +1,10 @@
 require("module-alias/register");
 const express = require("express");
-const response = require("@/middleware/respond.middleware");
+const response = require("@/middleware/responseFormat");
 const errorHandle = require("@/middleware/exceptionHandler");
+const testSuccess = require("@/routes/test-success.route");
+const testError = require("@/routes/test-error.route");
+const apiRateLimiter = require("@/middleware/rateLimiter");
 var cors = require("cors");
 const appRoute = require("@/routes");
 const notFoundHandle = require("@/middleware/notFoundHandler");
@@ -20,13 +23,16 @@ app.use(
                 callback(new Error("Not allowed by CORS"));
             }
         },
-        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         optionsSuccessStatus: 200,
     })
 );
 
 app.use(express.json());
 app.use(response);
+app.use(apiRateLimiter);
+app.use(testSuccess);
+app.use(testError);
 app.use("/api", appRoute);
 app.use(notFoundHandle);
 app.use(errorHandle);

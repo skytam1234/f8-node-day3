@@ -3,79 +3,64 @@ const pool = require("../config/database");
 
 const tasksModel = {
     async getAll() {
-        const [results] = await pool.query("select * from tasks");
+        const [results] = await pool.query("SELECT * FROM tasks");
         const data = results?.map((task) => ({
             ...task,
             isCompleted: task.isCompleted === 1,
         }));
         return data;
     },
-    async getById(id) {
-        const [results] = await pool.query(
-            `select * from tasks where id=${id}`
-        );
-        if (results) {
-            return results;
-        }
-        return null;
-    },
     async getOne(id) {
-        const [results] = await pool.query(
-            `select * from tasks where id=${id}`
-        );
-        const task = results[0];
-        if (task.length > 0) {
-            task.isCompleted = task.isCompleted == 1;
+        const [results] = await pool.query("SELECT * FROM tasks WHERE id = ?", [
+            id,
+        ]);
+        if (results.length > 0) {
+            const task = results[0];
+            task.isCompleted = task.isCompleted === 1;
             return task;
         }
-
         return null;
     },
     async create(data) {
-        if (data) {
-            const values = Object.values(data);
-            const query = `insert into tasks (title,isCompleted) values( ? , ? )`;
-            const [results] = await pool.execute(query, values);
-            if (results.insertId) {
-                const task = await this.getOne(results.insertId);
-                return task;
-            }
-            return results;
+        if (!data || !data.title) {
+            return null;
         }
-        return null;
-    },
-    async update(id, data) {
-        let para = "";
-        if (data) {
-            const keys = Object.keys(data);
-            keys?.forEach((key, index) => {
-                if (index === keys.length - 1) {
-                    para += `${key} = ? `;
-                } else {
-                    para += `${key} = ? ,`;
-                }
-            });
-            const values = Object.values(data);
-            const tasks = await this.getById(id);
-            if (tasks.length > 0) {
-                const query = `update tasks set ${para} where id= ${id} `;
-                const [results] = await pool.execute(query, values);
-                return `updated ${tasks.length} row`;
-            } else {
-                return null;
-            }
+        const query = "INSERT INTO tasks (title, isCompleted) VALUES (?, ?)";
+        const values = [data.title, data.isCompleted ? 1 : 0];
+        const [results] = await pool.execute(query, values);
+
+        if (results.insertId) {
+            const task = await this.getOne(results.insertId);
+            return task;
         }
         return null;
     },
 
-    async del(id) {
-        const query = `delete from tasks  where id= ${id}`;
-        const task = await this.getById(id);
-        if (task.length > 0) {
-            const [results] = await pool.query(query);
-            return `Deleted ${task.length} row`;
+    async update(id, data) {
+        if (!data || Object.keys(data).length === 0) {
+            return null;
         }
-        return null;
+        let para = "";
+        const keys = Object.keys(data);
+        keys?.forEach((key, index) => {
+            if (index === keys.length - 1) {
+                para += `${key} = ? `;
+            } else {
+                para += `${key} = ? ,`;
+            }
+        });
+        const values = Object.values(data);
+        values.push(id);
+        const query = `update tasks set ${para} where id= ? `;
+        const [results] = await pool.execute(query, values);
+        return `updated ${results.affectedRows} row`;
+    },
+
+    async del(id) {
+        const query = `delete from tasks  where id= ? `;
+        const [results] = await pool.query(query, [id]);
+        console.log(results);
+        return `Deleted ${results.affectedRows} row`;
     },
 };
 module.exports = tasksModel;

@@ -5,18 +5,14 @@ const response = (_, res, next) => {
             data,
         });
     };
-    res.error = (error, status = 400) => {
+    res.error = (status, message, error = null) => {
         res.status(status).json({
             status: "error",
+            message: message,
             error,
         });
     };
-    res.response = (message, status = 200) => {
-        res.status(status).json({
-            status: "success",
-            message,
-        });
-    };
+
     next();
 };
 module.exports = response;

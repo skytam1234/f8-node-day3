@@ -2,22 +2,16 @@ require("module-alias/register");
 const pool = require("../config/database");
 
 const tasksModel = {
-    async getAll() {
+    async findAll() {
         const [results] = await pool.query("SELECT * FROM tasks");
-        const data = results?.map((task) => ({
-            ...task,
-            isCompleted: task.isCompleted === 1,
-        }));
-        return data;
+        return results;
     },
-    async getOne(id) {
+    async findOne(id) {
         const [results] = await pool.query("SELECT * FROM tasks WHERE id = ?", [
             id,
         ]);
         if (results.length > 0) {
-            const task = results[0];
-            task.isCompleted = task.isCompleted === 1;
-            return task;
+            return results[0];
         }
         return null;
     },
@@ -25,17 +19,23 @@ const tasksModel = {
         if (!data || !data.title) {
             return null;
         }
-        const query = "INSERT INTO tasks (title, isCompleted) VALUES (?, ?)";
-        const values = [data.title, data.isCompleted ? 1 : 0];
+        const key = Object.keys(data).join(",");
+        const values = Object.values(data);
+
+        const valuesStr = Object.values(data)
+            .map(() => "?")
+            .join(",");
+
+        const query = `INSERT INTO tasks (${key}) VALUES (${valuesStr})`;
+        console.log(query);
         const [results] = await pool.execute(query, values);
 
         if (results.insertId) {
-            const task = await this.getOne(results.insertId);
+            const task = await this.findOne(results.insertId);
             return task;
         }
         return null;
     },
-
     async update(id, data) {
         if (!data || Object.keys(data).length === 0) {
             return null;
@@ -53,14 +53,13 @@ const tasksModel = {
         values.push(id);
         const query = `update tasks set ${para} where id= ? `;
         const [results] = await pool.execute(query, values);
-        return `updated ${results.affectedRows} row`;
+        return results.affectedRows;
     },
 
-    async del(id) {
+    async destroy(id) {
         const query = `delete from tasks  where id= ? `;
         const [results] = await pool.query(query, [id]);
-        console.log(results);
-        return `Deleted ${results.affectedRows} row`;
+        return results.affectedRows;
     },
 };
 module.exports = tasksModel;

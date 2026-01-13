@@ -1,4 +1,4 @@
 const notFoundHandle = (req, res) => {
-    res.error({ message: "404 Not Found" }, 404);
+    res.error(404, { message: "404 Not Found" });
 };
 module.exports = notFoundHandle;
